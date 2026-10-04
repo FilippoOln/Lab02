@@ -58,8 +58,8 @@ def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
             outfile.close()
             if anno not in album:
                 album[anno] = {codice:{'titolo':titolo,
-                               'autore':autore,
-                               'mese':mese
+                                       'autore':autore,
+                                       'mese':mese
                                        }
                                }
             else:

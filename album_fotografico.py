@@ -1,26 +1,31 @@
-from csv import reader
+from csv import reader, writer
+
 def carica_da_file(file_path):
     """Carica le foto dal file, creando un nuovo anno ogni volta che compare per la prima volta"""
     albumFoto ={}
     try:
         infile = open(file_path, "r")
         csvReader = reader(infile)
-        for row in csvReader:
-            anno = row[4]
-            #verifico se il csvReader sta leggendo la prima riga del file (riga di intestazioni colonne)
-            if anno.isdigit():
+        for (indice, row) in enumerate(csvReader):
+            #verifico che csvReader non stia leggendo la prima riga del file (riga di intestazioni colonne)
+            if indice !=0:
                 codice = row[0]
                 titolo = row[1]
                 autore = row[2]
                 mese = int(row[3])
-                anno = int(anno)
+                anno = int(row[4])
                 if anno not in albumFoto:
+                    """inserisco nel dizionario AlbumFoto un elemento con chiave anno e valor associato
+                    un altro dizionario con un elemento con chiave codice e valor un altro dizionario,  """
                     albumFoto[anno] = {codice:{'titolo':titolo,
                                                'autore': autore,
                                                'mese':mese
                                                }
                                        }
+
                 else:
+                    """ inserisco nel dizionario che rappresenta il valor associato alla chiave anno presente
+                    nel dizionario albumFoto un elemento avente come chiave codice e valor un atro dizionario"""
                     albumFoto[anno][codice]= {'titolo':titolo,
                                               'autore':autore,
                                               'mese': mese
@@ -35,16 +40,21 @@ def carica_da_file(file_path):
 
 def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
     """Aggiunge una foto all'album, creando l'anno al volo se non è ancora presente"""
+
+    # verifico che il codice della foto non sia gia presente nell'album fotografico
     for keyAnno in album:
         if codice in album[keyAnno]:
             return None
+    #verifico se il mese inserito è valido (il mese è già stato convertito in intero)
     if mese <1 or mese >12:
         return None
 
     else:
         try:
-            outfile = open(file_path, 'a')
-            outfile.write(f"{codice},{titolo},{autore},{mese},{anno}\n")
+
+            outfile = (open(file_path, 'a'))
+            csvWriter= writer(outfile, lineterminator='\n')
+            csvWriter.writerow([codice, titolo, autore, mese, anno])
             outfile.close()
             if anno not in album:
                 album[anno] = {codice:{'titolo':titolo,
@@ -58,8 +68,10 @@ def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
                                       'mese': mese
                                       }
             riferimentoFoto = album[anno][codice]
+        #se il file non vien trovato, la funzione restituisce None
         except FileNotFoundError:
             return None
+    #restituisco un riferimento alla foto aggiunta
     return riferimentoFoto
 
 
@@ -67,12 +79,17 @@ def aggiungi_foto(album, codice, titolo, autore, mese, anno, file_path):
 def cerca_foto(album, codice):
     """Cerca una foto nell'album dato il codice"""
     trovata = False
+    #itero su ogni chiave (che rappresenta un anno) presente nel dizionario ALbumFoto
     for keyAnno in album:
         if codice in album[keyAnno]:
             trovata = True
+            """creo una lista con in prima pos la chiave del dizionario album tale per cui nel dizionario associato
+             a essa è stato trovato un elemento che ha per chiave il codice cercato, e in seconda pos il dizionario 
+             associato alla chiave codice (contenuta nel dizionario album)"""
             infoFoto = [keyAnno, album[keyAnno][codice]]
             break
     if trovata:
+        # restituisco una strnga con le informazioni della foto avente quel codice
         stringaFoto= f"{codice}, {infoFoto[1]['titolo']}, {infoFoto[1]['autore']}, {infoFoto[1]['mese']}, {infoFoto[0]}"
         return stringaFoto
     else:
@@ -83,12 +100,16 @@ def elenco_foto_anno_per_titolo(album, anno):
     """Ordina i titoli delle foto di un dato anno in ordine alfabetico"""
     if anno in album:
         listaTitoli = []
+
+        """itero sulle chiavi (che son i codici delle foto) del dizionario che è il valor associato alla chiave 
+        anno nel dizionario album"""
         for keyCodice in album[anno]:
             listaTitoli.append(album[anno][keyCodice]['titolo'])
         listaTitoli.sort()
         return listaTitoli
     else:
         return None
+
 
 def main():
     album = []
